@@ -37,11 +37,11 @@ const Tasks = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadData = async () => {
+const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-const [tasksData, contactsData] = await Promise.all([
+      const [tasksData, contactsData] = await Promise.all([
         taskService.getAll(),
         contactService.getAll()
       ]);
@@ -56,6 +56,7 @@ const [tasksData, contactsData] = await Promise.all([
       setTasks(tasksData);
       setContacts(transformedContacts);
       setFilteredTasks(tasksData);
+    } catch (err) {
       setError(err.message);
       toast.error('Failed to load tasks data');
     } finally {
