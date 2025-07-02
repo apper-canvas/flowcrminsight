@@ -1,7 +1,10 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import ApperIcon from '@/components/ApperIcon';
+import React, { useContext } from "react";
+import { useSelector } from "react-redux";
+import { NavLink, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { AuthContext } from "../../App";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: 'LayoutDashboard' },
@@ -53,29 +56,12 @@ const Sidebar = ({ isOpen, onClose }) => {
               </NavLink>
             );
           })}
-        </nav>
+</nav>
 
-        <div className="px-4 py-6 border-t border-slate-200">
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
-                <ApperIcon name="User" className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">
-                  Sales Manager
-                </p>
-                <p className="text-xs text-slate-500 truncate">
-                  admin@flowcrm.com
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <UserProfileSection />
       </div>
     </div>
   );
-
   // Mobile Sidebar
   const MobileSidebar = () => (
     <AnimatePresence>
@@ -138,25 +124,9 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </NavLink>
                   );
                 })}
-              </nav>
+</nav>
 
-              <div className="px-4 py-6 border-t border-slate-200">
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
-                      <ApperIcon name="User" className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">
-                        Sales Manager
-                      </p>
-                      <p className="text-xs text-slate-500 truncate">
-                        admin@flowcrm.com
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <UserProfileSection />
             </div>
           </motion.div>
         </div>
@@ -169,6 +139,49 @@ const Sidebar = ({ isOpen, onClose }) => {
       <DesktopSidebar />
       <MobileSidebar />
     </>
+  );
+};
+// User Profile Component
+const UserProfileSection = () => {
+  const { logout } = useContext(AuthContext);
+  const { user, isAuthenticated } = useSelector((state) => state.user);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <div className="px-4 py-6 border-t border-slate-200">
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">
+                {(user?.firstName || user?.name || 'U').charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {user?.firstName && user?.lastName 
+                  ? `${user.firstName} ${user.lastName}`
+                  : user?.name || 'User'
+                }
+              </p>
+              <p className="text-xs text-slate-500 truncate">
+                {user?.emailAddress || user?.email || 'user@company.com'}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="LogOut"
+            onClick={logout}
+            className="text-slate-500 hover:text-slate-700"
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 

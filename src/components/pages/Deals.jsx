@@ -56,8 +56,16 @@ const loadData = async () => {
         contactService.getAll(),
         filterService.getByEntityType('deals')
       ]);
+      
+      // Transform database field names to UI field names
+      const transformedContacts = contactsData.map(contact => ({
+        ...contact,
+        name: contact.Name || contact.name,
+        tags: contact.Tags ? (typeof contact.Tags === 'string' ? contact.Tags.split(',') : contact.Tags) : []
+      }));
+      
       setDeals(dealsData);
-      setContacts(contactsData);
+      setContacts(transformedContacts);
       setFilteredDeals(dealsData);
       setSavedFilters(filtersData);
     } catch (err) {
@@ -376,12 +384,12 @@ useEffect(() => {
                           </div>
                           
                           <div className="flex items-center space-x-2 mb-2">
-                            <div className="w-6 h-6 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
+<div className="w-6 h-6 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
                               <span className="text-white text-xs font-medium">
-                                {contact.name.charAt(0).toUpperCase()}
+                                {(contact.name || contact.Name || '').charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <span className="text-xs text-slate-600 truncate">{contact.name}</span>
+<span className="text-xs text-slate-600 truncate">{contact.name || contact.Name}</span>
                           </div>
                           
                           <div className="flex items-center justify-between">
@@ -416,9 +424,9 @@ useEffect(() => {
               label="Contact"
               value={formData.contactId}
               onChange={(e) => setFormData(prev => ({ ...prev, contactId: e.target.value }))}
-              options={contacts.map(contact => ({
+options={contacts.map(contact => ({
                 value: contact.Id.toString(),
-                label: `${contact.name} - ${contact.company}`
+                label: `${contact.name || contact.Name} - ${contact.company}`
               }))}
               error={formErrors.contactId}
               required

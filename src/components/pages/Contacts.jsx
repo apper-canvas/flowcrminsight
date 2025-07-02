@@ -51,8 +51,16 @@ const loadContacts = async () => {
         contactService.getAll(),
         filterService.getByEntityType('contacts')
       ]);
-      setContacts(contactsData);
-      setFilteredContacts(contactsData);
+      
+      // Transform database field names to UI field names
+      const transformedContacts = contactsData.map(contact => ({
+        ...contact,
+        name: contact.Name || contact.name,
+        tags: contact.Tags ? (typeof contact.Tags === 'string' ? contact.Tags.split(',') : contact.Tags) : []
+      }));
+      
+      setContacts(transformedContacts);
+      setFilteredContacts(transformedContacts);
       setSavedFilters(filtersData);
     } catch (err) {
       setError(err.message);
@@ -115,7 +123,7 @@ useEffect(() => {
     return errors;
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm();
     setFormErrors(errors);
@@ -125,7 +133,15 @@ useEffect(() => {
     try {
       setIsSubmitting(true);
       const newContact = await contactService.create(formData);
-      setContacts(prev => [newContact, ...prev]);
+      
+      // Transform database response to UI format
+      const transformedContact = {
+        ...newContact,
+        name: newContact.Name || newContact.name,
+        tags: newContact.Tags ? (typeof newContact.Tags === 'string' ? newContact.Tags.split(',') : newContact.Tags) : []
+      };
+      
+      setContacts(prev => [transformedContact, ...prev]);
       setIsModalOpen(false);
       setFormData({
         name: '',
@@ -302,9 +318,9 @@ activeTab={statusFilter}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
+<div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
                           <span className="text-white font-medium text-sm">
-                            {contact.name.charAt(0).toUpperCase()}
+                            {(contact.name || contact.Name || '').charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div className="ml-4">
@@ -312,7 +328,7 @@ activeTab={statusFilter}
                             to={`/contacts/${contact.Id}`}
                             className="text-sm font-medium text-slate-900 hover:text-primary transition-colors"
                           >
-                            {contact.name}
+                            {contact.name || contact.Name}
                           </Link>
                           <div className="text-sm text-slate-500">{contact.email}</div>
                         </div>
@@ -328,16 +344,16 @@ activeTab={statusFilter}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-1">
-                        {contact.tags.map((tag, tagIndex) => (
+<div className="flex space-x-1">
+                        {(contact.tags || []).map((tag, tagIndex) => (
                           <Badge key={tagIndex} variant="default" size="sm">
                             {tag}
                           </Badge>
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {format(new Date(contact.createdAt), 'MMM dd, yyyy')}
+<td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                      {format(new Date(contact.createdAt || contact.CreatedOn), 'MMM dd, yyyy')}
                     </td>
 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">

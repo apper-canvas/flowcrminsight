@@ -1,105 +1,441 @@
-import emailsData from '@/services/mockData/emails.json';
-
-let emails = [...emailsData];
-
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const tableName = 'email';
 
 export const emailService = {
   async getAll() {
-    await delay(300);
-    return [...emails];
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "contactId" } },
+          { field: { Name: "to" } },
+          { field: { Name: "from" } },
+          { field: { Name: "subject" } },
+          { field: { Name: "content" } },
+          { field: { Name: "timestamp" } },
+          { field: { Name: "type" } },
+          { field: { Name: "threadId" } },
+          { field: { Name: "Tags" } },
+          { field: { Name: "CreatedOn" } },
+          { field: { Name: "CreatedBy" } },
+          { field: { Name: "ModifiedOn" } },
+          { field: { Name: "ModifiedBy" } }
+        ]
+      };
+
+      const response = await apperClient.fetchRecords(tableName, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data || [];
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching emails:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
+    }
   },
 
   async getById(id) {
-    await delay(200);
-    const email = emails.find(e => e.Id === parseInt(id));
-    if (!email) {
-      throw new Error('Email not found');
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "contactId" } },
+          { field: { Name: "to" } },
+          { field: { Name: "from" } },
+          { field: { Name: "subject" } },
+          { field: { Name: "content" } },
+          { field: { Name: "timestamp" } },
+          { field: { Name: "type" } },
+          { field: { Name: "threadId" } },
+          { field: { Name: "Tags" } }
+        ]
+      };
+
+      const response = await apperClient.getRecordById(tableName, id, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error(`Error fetching email with ID ${id}:`, error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
     }
-    return { ...email };
   },
 
   async getByContactId(contactId) {
-    await delay(250);
-    return emails.filter(email => email.contactId === parseInt(contactId))
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "contactId" } },
+          { field: { Name: "to" } },
+          { field: { Name: "from" } },
+          { field: { Name: "subject" } },
+          { field: { Name: "content" } },
+          { field: { Name: "timestamp" } },
+          { field: { Name: "type" } },
+          { field: { Name: "threadId" } }
+        ],
+        where: [{
+          FieldName: "contactId",
+          Operator: "EqualTo",
+          Values: [parseInt(contactId)]
+        }],
+        orderBy: [{
+          fieldName: "timestamp",
+          sorttype: "DESC"
+        }]
+      };
+
+      const response = await apperClient.fetchRecords(tableName, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data || [];
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching emails by contact ID:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
+    }
   },
 
   async getThreadById(threadId) {
-    await delay(200);
-    return emails.filter(email => email.threadId === parseInt(threadId) || email.Id === parseInt(threadId))
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      const params = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "contactId" } },
+          { field: { Name: "to" } },
+          { field: { Name: "from" } },
+          { field: { Name: "subject" } },
+          { field: { Name: "content" } },
+          { field: { Name: "timestamp" } },
+          { field: { Name: "type" } },
+          { field: { Name: "threadId" } }
+        ],
+        whereGroups: [{
+          operator: "OR",
+          subGroups: [
+            {
+              conditions: [{
+                fieldName: "threadId",
+                operator: "EqualTo",
+                values: [parseInt(threadId)],
+                include: true
+              }]
+            },
+            {
+              conditions: [{
+                fieldName: "Id",
+                operator: "EqualTo",
+                values: [parseInt(threadId)],
+                include: true
+              }]
+            }
+          ]
+        }],
+        orderBy: [{
+          fieldName: "timestamp",
+          sorttype: "ASC"
+        }]
+      };
+
+      const response = await apperClient.fetchRecords(tableName, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data || [];
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error fetching email thread:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
+    }
   },
 
   async send(emailData) {
-    await delay(400);
-    const maxId = Math.max(...emails.map(e => e.Id), 0);
-    const newEmail = {
-      ...emailData,
-      Id: maxId + 1,
-      timestamp: new Date().toISOString(),
-      type: 'sent',
-      threadId: emailData.threadId || null
-    };
-    
-    emails.push(newEmail);
-    
-    // Simulate auto-reply after a delay
-    setTimeout(async () => {
-      const replyId = Math.max(...emails.map(e => e.Id), 0) + 1;
-      const autoReply = {
-        Id: replyId,
-        contactId: emailData.contactId,
-        to: 'you@company.com',
-        from: emailData.to,
-        subject: `Re: ${emailData.subject}`,
-        content: 'Thank you for your email. I will get back to you soon.',
-        timestamp: new Date(Date.now() + 30000).toISOString(),
-        type: 'received',
-        threadId: newEmail.threadId || newEmail.Id
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      // Only include Updateable fields
+      const filteredData = {
+        contactId: parseInt(emailData.contactId),
+        to: emailData.to,
+        from: emailData.from || 'you@company.com',
+        subject: emailData.subject,
+        content: emailData.content,
+        timestamp: new Date().toISOString(),
+        type: 'sent',
+        threadId: emailData.threadId ? parseInt(emailData.threadId) : null,
+        Tags: Array.isArray(emailData.tags) ? emailData.tags.join(',') : emailData.tags || ''
       };
-      emails.push(autoReply);
-    }, 2000);
-    
-    return { ...newEmail };
+
+      const params = {
+        records: [filteredData]
+      };
+
+      const response = await apperClient.createRecord(tableName, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successfulRecords = response.results.filter(result => result.success);
+        const failedRecords = response.results.filter(result => !result.success);
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to create ${failedRecords.length} records:${JSON.stringify(failedRecords)}`);
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              throw new Error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return successfulRecords[0]?.data;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error sending email:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
+    }
   },
 
   async saveDraft(emailData) {
-    await delay(300);
-    const maxId = Math.max(...emails.map(e => e.Id), 0);
-    const draft = {
-      ...emailData,
-      Id: maxId + 1,
-      timestamp: new Date().toISOString(),
-      type: 'draft'
-    };
-    
-    emails.push(draft);
-    return { ...draft };
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      // Only include Updateable fields
+      const filteredData = {
+        contactId: parseInt(emailData.contactId),
+        to: emailData.to,
+        from: emailData.from || 'you@company.com',
+        subject: emailData.subject,
+        content: emailData.content,
+        timestamp: new Date().toISOString(),
+        type: 'draft',
+        threadId: emailData.threadId ? parseInt(emailData.threadId) : null,
+        Tags: Array.isArray(emailData.tags) ? emailData.tags.join(',') : emailData.tags || ''
+      };
+
+      const params = {
+        records: [filteredData]
+      };
+
+      const response = await apperClient.createRecord(tableName, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successfulRecords = response.results.filter(result => result.success);
+        const failedRecords = response.results.filter(result => !result.success);
+        
+        if (failedRecords.length > 0) {
+          console.error(`Failed to create ${failedRecords.length} records:${JSON.stringify(failedRecords)}`);
+          failedRecords.forEach(record => {
+            record.errors?.forEach(error => {
+              throw new Error(`${error.fieldLabel}: ${error.message}`);
+            });
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return successfulRecords[0]?.data;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error saving email draft:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
+    }
   },
 
   async delete(id) {
-    await delay(250);
-    const index = emails.findIndex(e => e.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error('Email not found');
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      const params = {
+        RecordIds: [parseInt(id)]
+      };
+
+      const response = await apperClient.deleteRecord(tableName, params);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const failedDeletions = response.results.filter(result => !result.success);
+        
+        if (failedDeletions.length > 0) {
+          console.error(`Failed to delete ${failedDeletions.length} records:${JSON.stringify(failedDeletions)}`);
+          failedDeletions.forEach(record => {
+            if (record.message) throw new Error(record.message);
+          });
+        }
+        
+        return true;
+      }
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error deleting email:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
     }
-    emails.splice(index, 1);
-    return true;
   },
 
   async search(query, contactId = null) {
-    await delay(200);
-    const searchQuery = query.toLowerCase();
-    let filtered = emails.filter(email =>
-      email.subject.toLowerCase().includes(searchQuery) ||
-      email.content.toLowerCase().includes(searchQuery)
-    );
-    
-    if (contactId) {
-      filtered = filtered.filter(email => email.contactId === parseInt(contactId));
+    try {
+      const { ApperClient } = window.ApperSDK;
+      const apperClient = new ApperClient({
+        apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+        apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY
+      });
+
+      const searchParams = {
+        fields: [
+          { field: { Name: "Name" } },
+          { field: { Name: "contactId" } },
+          { field: { Name: "to" } },
+          { field: { Name: "from" } },
+          { field: { Name: "subject" } },
+          { field: { Name: "content" } },
+          { field: { Name: "timestamp" } },
+          { field: { Name: "type" } },
+          { field: { Name: "threadId" } }
+        ],
+        whereGroups: [{
+          operator: "OR",
+          subGroups: [
+            {
+              conditions: [{
+                fieldName: "subject",
+                operator: "Contains",
+                values: [query],
+                include: true
+              }]
+            },
+            {
+              conditions: [{
+                fieldName: "content",
+                operator: "Contains",
+                values: [query],
+                include: true
+              }]
+            }
+          ]
+        }],
+        orderBy: [{
+          fieldName: "timestamp",
+          sorttype: "DESC"
+        }]
+      };
+
+      if (contactId) {
+        searchParams.where = [{
+          FieldName: "contactId",
+          Operator: "EqualTo",
+          Values: [parseInt(contactId)]
+        }];
+      }
+
+      const response = await apperClient.fetchRecords(tableName, searchParams);
+      
+      if (!response.success) {
+        console.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return response.data || [];
+    } catch (error) {
+      if (error?.response?.data?.message) {
+        console.error("Error searching emails:", error?.response?.data?.message);
+        throw new Error(error.response.data.message);
+      } else {
+        console.error(error.message);
+        throw error;
+      }
     }
-    
-    return filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }
 };

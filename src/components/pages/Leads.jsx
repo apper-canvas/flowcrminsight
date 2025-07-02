@@ -49,8 +49,16 @@ const loadData = async () => {
         contactService.getAll(),
         filterService.getByEntityType('leads')
       ]);
+      
+      // Transform database field names to UI field names
+      const transformedContacts = contactsData.map(contact => ({
+        ...contact,
+        name: contact.Name || contact.name,
+        tags: contact.Tags ? (typeof contact.Tags === 'string' ? contact.Tags.split(',') : contact.Tags) : []
+      }));
+      
       setLeads(leadsData);
-      setContacts(contactsData);
+      setContacts(transformedContacts);
       setFilteredLeads(leadsData);
       setSavedFilters(filtersData);
     } catch (err) {
@@ -77,11 +85,11 @@ useEffect(() => {
     }
 
     // Filter by search term
-    if (searchTerm) {
+if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(lead => {
         return lead.contact && (
-          lead.contact.name.toLowerCase().includes(searchLower) ||
+          (lead.contact.name || lead.contact.Name || '').toLowerCase().includes(searchLower) ||
           lead.contact.email.toLowerCase().includes(searchLower) ||
           lead.contact.company.toLowerCase().includes(searchLower) ||
           lead.source.toLowerCase().includes(searchLower)
@@ -106,8 +114,10 @@ useEffect(() => {
           return b.score - a.score;
         case 'created':
           return new Date(b.createdAt) - new Date(a.createdAt);
-        case 'name': {
-          return a.contact && b.contact ? a.contact.name.localeCompare(b.contact.name) : 0;
+case 'name': {
+          const aName = a.contact ? (a.contact.name || a.contact.Name || '') : '';
+          const bName = b.contact ? (b.contact.name || b.contact.Name || '') : '';
+          return aName.localeCompare(bName);
         }
         default:
           return 0;
@@ -124,7 +134,7 @@ useEffect(() => {
     return errors;
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm();
     setFormErrors(errors);
@@ -348,13 +358,13 @@ useEffect(() => {
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
+<div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
                             <span className="text-white font-medium text-sm">
-                              {contact.name.charAt(0).toUpperCase()}
+                              {(contact.name || contact.Name || '').charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-slate-900">{contact.name}</div>
+<div className="ml-4">
+                            <div className="text-sm font-medium text-slate-900">{contact.name || contact.Name}</div>
                             <div className="text-sm text-slate-500">{contact.email}</div>
                           </div>
                         </div>
@@ -434,9 +444,9 @@ useEffect(() => {
             label="Contact"
             value={formData.contactId}
             onChange={(e) => setFormData(prev => ({ ...prev, contactId: e.target.value }))}
-            options={contacts.map(contact => ({
+options={contacts.map(contact => ({
               value: contact.Id.toString(),
-              label: `${contact.name} - ${contact.company}`
+              label: `${contact.name || contact.Name} - ${contact.company}`
             }))}
             error={formErrors.contactId}
             required

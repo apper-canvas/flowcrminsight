@@ -31,14 +31,21 @@ const ContactDetail = () => {
       setLoading(true);
       setError(null);
       
-      const [contactData, dealsData, tasksData, activitiesData] = await Promise.all([
+const [contactData, dealsData, tasksData, activitiesData] = await Promise.all([
         contactService.getById(id),
         dealService.getByContactId(id),
         taskService.getByContactId(id),
         activityService.getByContactId(id)
       ]);
 
-      setContact(contactData);
+      // Transform database field names to UI field names
+      const transformedContact = {
+        ...contactData,
+        name: contactData.Name || contactData.name,
+        tags: contactData.Tags ? (typeof contactData.Tags === 'string' ? contactData.Tags.split(',') : contactData.Tags) : []
+      };
+
+      setContact(transformedContact);
       setDeals(dealsData);
       setTasks(tasksData);
       setActivities(activitiesData);
@@ -116,12 +123,12 @@ const tabs = [
           </Link>
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">
-                {contact.name.charAt(0).toUpperCase()}
+<span className="text-white font-bold text-xl">
+                {(contact.name || contact.Name || '').charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">{contact.name}</h1>
+<h1 className="text-2xl font-bold text-slate-900">{contact.name || contact.Name}</h1>
               <p className="text-slate-600">{contact.company}</p>
             </div>
           </div>
@@ -186,9 +193,9 @@ const tabs = [
               <ApperIcon name="Calendar" className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-500">Member Since</p>
+<p className="text-sm text-slate-500">Member Since</p>
               <p className="text-sm font-medium text-slate-900">
-                {format(new Date(contact.createdAt), 'MMM dd, yyyy')}
+                {format(new Date(contact.createdAt || contact.CreatedOn), 'MMM dd, yyyy')}
               </p>
             </div>
           </div>
@@ -227,8 +234,8 @@ const tabs = [
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Tags</label>
-                    <div className="flex flex-wrap gap-2">
-                      {contact.tags.map((tag, index) => (
+<div className="flex flex-wrap gap-2">
+                      {(contact.tags || []).map((tag, index) => (
                         <Badge key={index} variant="default" size="sm">
                           {tag}
                         </Badge>

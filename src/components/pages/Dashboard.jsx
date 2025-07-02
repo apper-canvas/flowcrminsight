@@ -26,14 +26,21 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      const [contacts, deals, tasks, leads] = await Promise.all([
+const [contacts, deals, tasks, leads] = await Promise.all([
         contactService.getAll(),
         dealService.getAll(),
         taskService.getAll(),
         leadService.getAll()
       ]);
 
-      setDashboardData({ contacts, deals, tasks, leads });
+      // Transform database field names to UI field names
+      const transformedContacts = contacts.map(contact => ({
+        ...contact,
+        name: contact.Name || contact.name,
+        tags: contact.Tags ? (typeof contact.Tags === 'string' ? contact.Tags.split(',') : contact.Tags) : []
+      }));
+
+      setDashboardData({ contacts: transformedContacts, deals, tasks, leads });
     } catch (err) {
       setError(err.message);
       toast.error('Failed to load dashboard data');

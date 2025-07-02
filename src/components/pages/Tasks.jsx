@@ -41,14 +41,21 @@ const Tasks = () => {
     try {
       setLoading(true);
       setError(null);
-      const [tasksData, contactsData] = await Promise.all([
+const [tasksData, contactsData] = await Promise.all([
         taskService.getAll(),
         contactService.getAll()
       ]);
+      
+      // Transform database field names to UI field names
+      const transformedContacts = contactsData.map(contact => ({
+        ...contact,
+        name: contact.Name || contact.name,
+        tags: contact.Tags ? (typeof contact.Tags === 'string' ? contact.Tags.split(',') : contact.Tags) : []
+      }));
+      
       setTasks(tasksData);
-      setContacts(contactsData);
+      setContacts(transformedContacts);
       setFilteredTasks(tasksData);
-    } catch (err) {
       setError(err.message);
       toast.error('Failed to load tasks data');
     } finally {
@@ -68,9 +75,9 @@ const Tasks = () => {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(task => {
         const contact = contacts.find(c => c.Id === task.contactId);
-        return task.title.toLowerCase().includes(searchLower) ||
+return task.title.toLowerCase().includes(searchLower) ||
                task.assignee.toLowerCase().includes(searchLower) ||
-               (contact && contact.name.toLowerCase().includes(searchLower));
+               (contact && (contact.name || contact.Name || '').toLowerCase().includes(searchLower));
       });
     }
 
@@ -415,13 +422,13 @@ const Tasks = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
+<div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center">
                             <span className="text-white font-medium text-xs">
-                              {contact.name.charAt(0).toUpperCase()}
+                              {(contact.name || contact.Name || '').charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium text-slate-900">{contact.name}</div>
+<div className="ml-3">
+                            <div className="text-sm font-medium text-slate-900">{contact.name || contact.Name}</div>
                             <div className="text-sm text-slate-500">{contact.company}</div>
                           </div>
                         </div>
@@ -500,9 +507,9 @@ const Tasks = () => {
             label="Contact"
             value={formData.contactId}
             onChange={(e) => setFormData(prev => ({ ...prev, contactId: e.target.value }))}
-            options={contacts.map(contact => ({
+options={contacts.map(contact => ({
               value: contact.Id.toString(),
-              label: `${contact.name} - ${contact.company}`
+              label: `${contact.name || contact.Name} - ${contact.company}`
             }))}
             error={formErrors.contactId}
             required
